@@ -49,26 +49,28 @@ public class MenuManager {
 					//dailyCooldown.reduce(timer*50);
 
 					boolean claimable = dailyCooldown.getTimeLeftInMillis() <= 0;
-					inventory.setItem(Config.DAILY_POSITION.asInt(),
-							ItemBuilder.from(
+
+					ItemStack item = ItemBuilder.from(claimable
+									? Config.DAILY_AVAILABLE_ITEM.asAnItem()
+									: Config.DAILY_UNAVAILABLE_ITEM.asAnItem()
+							)
+							.setGlow(claimable)
+							.setName(
 									claimable
-											? Config.DAILY_AVAILABLE_ITEM.asAnItem()
-											: Config.DAILY_UNAVAILABLE_ITEM.asAnItem()
-									)
-									.setGlow(claimable)
-									.setName(
-											claimable
-													? Lang.DAILY_DISPLAY_NAME_AVAILABLE.asPlaceholderReplacedText(player)
-													: Lang.DAILY_DISPLAY_NAME_UNAVAILABLE.asPlaceholderReplacedText(player)
-									).setLore(
-											claimable
-													? Lang.valueOf(String.format("DAILY_AVAILABLE%s_LORE", DailyRewardsPlugin.isPremium(player, RewardType.DAILY))).asReplacedList(Collections.emptyMap())
-													: Lang.DAILY_UNAVAILABLE_LORE.asReplacedList(new HashMap<String, String>() {{
-														put("%cooldown%", dailyCooldown.getFormat(Config.DAILY_COOLDOWN_FORMAT.asString()));
-													}})
-									)
-									.build()
-					);
+											? Lang.DAILY_DISPLAY_NAME_AVAILABLE.asPlaceholderReplacedText(player)
+											: Lang.DAILY_DISPLAY_NAME_UNAVAILABLE.asPlaceholderReplacedText(player)
+							).setLore(
+									claimable
+											? Lang.valueOf(String.format("DAILY_AVAILABLE%s_LORE", DailyRewardsPlugin.isPremium(player, RewardType.DAILY))).asReplacedList(Collections.emptyMap())
+											: Lang.DAILY_UNAVAILABLE_LORE.asReplacedList(new HashMap<String, String>() {{
+										put("%cooldown%", dailyCooldown.getFormat(Config.DAILY_COOLDOWN_FORMAT.asString()));
+									}})
+							)
+							.build();
+					Bukkit.getScheduler().runTask(DailyRewardsPlugin.get(), () -> {
+						inventory.setItem(Config.DAILY_POSITION.asInt(), item);
+						player.updateInventory();
+					});
 				}, 0, timer));
 			}
 
@@ -101,9 +103,9 @@ public class MenuManager {
 				final Cooldown monthlyCooldown = user.getCooldownOfReward(RewardType.MONTHLY);
 				inventory.setItem(Config.MONTHLY_POSITION.asInt(),
 						ItemBuilder.from(
-								monthlyCooldown.isClaimable()
-										? Config.MONTHLY_AVAILABLE_ITEM.asAnItem()
-										: Config.MONTHLY_UNAVAILABLE_ITEM.asAnItem()
+										monthlyCooldown.isClaimable()
+												? Config.MONTHLY_AVAILABLE_ITEM.asAnItem()
+												: Config.MONTHLY_UNAVAILABLE_ITEM.asAnItem()
 								)
 								.setGlow(monthlyCooldown.isClaimable())
 								.setName(
